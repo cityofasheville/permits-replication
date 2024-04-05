@@ -2,13 +2,17 @@ import get_pg_client from './get_pg_client.js';
 import get_ss_client from './get_ss_client.js';
 import getConnection from './getConnection.js';
 
-export async function handler (event, context) {
+export async function handler(event, context) {
     try {
         let insert_count = 0;
         let update_count = 0;
+        let datarows = [];
         const accela_connection = await getConnection('coa-acceladb/accela/mssqlgisadmin');
         const library_connection = await getConnection('pubrecdb1/mdastore1/dbadmin');
-
+        if (event.local) {
+            accela_connection.host = 'localhost';
+            library_connection.host = 'localhost';
+        }
         const source_client = await get_ss_client(accela_connection);
         const target_client = await get_pg_client(library_connection);
 
@@ -27,39 +31,31 @@ export async function handler (event, context) {
             `);
 
         let columnnames = Object.keys(recordset[0]);
-        let insert_header = `INSERT INTO internal.permits_temp(${ columnnames.join(',')})  VALUES `;
-        let update_header = `UPDATE internal.permits_temp SET `;
-        let query_string;
+        let colchanges = columnnames
+            .filter(col => col !== 'permit_num')
+            .map(col => {
+                return col + ' = excluded.' + col
+            });
+        let changes = colchanges.join(`,\n `);
+
         for (const record of recordset) { // Each new row
-            const sel_query = `SELECT * FROM internal.permits_temp WHERE permit_num = '${record.permit_num}'`;
-            const { rowCount } = await target_client.query(sel_query);
-            if (rowCount > 0) { // Already exists, so update
-                query_string = update_header;
-                let colchanges = columnnames.map(col => {
-                    return col + ' = ' + JSON.stringify(record[col], escaper).replace(/"/g, "'")
-                })
-                query_string += colchanges.join(', ');
-                query_string += ` where permit_num = '${record.permit_num}'`;
-                // console.log(query_string);
-                const { rowCount } = await target_client.query(query_string);
-                update_count += rowCount;
-            } else { // New row, so insert
-                query_string = `${insert_header}( ${Object.values(record).map(col => JSON.stringify(col, escaper)).join(',').replace(/"/g, "'")} )`;
-                // console.log(query_string);
-                const { rowCount } = await target_client.query(query_string);
-                insert_count += rowCount;
-            }
+            datarows.push(`( ${Object.values(record).map(col => JSON.stringify(col, escaper)).join(',').replace(/"/g, "'")} )\n`);
         }
+        let query_string = `INSERT INTO internal.permits_temp(${columnnames.join(',')})  VALUES\n `;
+        query_string += datarows.join(', ');
+        query_string += ` on conflict(permit_num) do update set\n ${changes};`;
+
+        // console.log(query_string);
+        const { rowCount } = await target_client.query(query_string);
 
         await target_client.end();
         await source_client.close();
-        console.log(`Inserted ${insert_count} rows and updated ${update_count} rows.`);
+        console.log(`Updated ${rowCount} rows.`);
         return ({
             'statusCode': 200,
             'body': {
                 "lambda_output": {
-                    "insert_results": insert_count,
-                    "update_results": update_count
+                    "rows_updated": rowCount
                 }
             }
         })
