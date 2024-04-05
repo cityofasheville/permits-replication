@@ -1,0 +1,14 @@
+{
+  "source_location": {
+      "connection": "localss1",
+      "schemaname": "replicate",
+      "tablename": "temp_testtable"
+  },
+  "target_location": {
+      "connection": "localpg2",
+      "schemaname": "public",
+      "tablename": "testtable"
+  },
+  "unique_columns": ["id"]
+}
+
