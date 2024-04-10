@@ -41,12 +41,13 @@ export async function handler(event, context) {
         for (const record of recordset) { // Each new row
             datarows.push(`( ${Object.values(record).map(col => JSON.stringify(col, escaper)).join(',').replace(/"/g, "'")} )\n`);
         }
-        let query_string = `INSERT INTO internal.permits_temp(${columnnames.join(',')})  VALUES\n `;
+        let query_string = `INSERT INTO internal.permits(${columnnames.join(',')})  VALUES\n `;
         query_string += datarows.join(', ');
         query_string += ` on conflict(permit_num) do update set\n ${changes};`;
 
         // console.log(query_string);
         const { rowCount } = await target_client.query(query_string);
+        await target-Client.query('refresh materialized view concurrently simplicity.m_v_simplicity_permits;');
 
         await target_client.end();
         await source_client.close();

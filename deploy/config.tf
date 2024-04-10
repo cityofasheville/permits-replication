@@ -45,7 +45,7 @@ resource "aws_lambda_function" "${prog_name}" {
   filename = data.archive_file.${prog_name}_zip.output_path
   source_code_hash = data.archive_file.${prog_name}_zip.output_base64sha256
   layers = [aws_lambda_layer_version.${prog_name}_layer.arn]
-  timeout          = 20
+  timeout          = 120
   # memory_size      = 256
   vpc_config {
     subnet_ids         = var.subnet_ids
