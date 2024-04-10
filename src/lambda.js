@@ -47,7 +47,7 @@ export async function handler(event, context) {
 
         // console.log(query_string);
         const { rowCount } = await target_client.query(query_string);
-        await target-Client.query('refresh materialized view concurrently simplicity.m_v_simplicity_permits;');
+        await target_client.query('refresh materialized view concurrently simplicity.m_v_simplicity_permits;');
 
         await target_client.end();
         await source_client.close();
