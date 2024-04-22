@@ -73,6 +73,7 @@ export async function handler(event, context) {
             }
         })
     } catch (err) {
+        console.log("Error",err);
         return (returnError(err))
     } finally {
         await target_client.end();
