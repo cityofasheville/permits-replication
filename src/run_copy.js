@@ -2,7 +2,6 @@
 
 async function run_copy(source_client, target_client, select_string, insert_table, unique_columns) {
     let datarows = [];
-    console.log(select_string)
     const { recordset } = await source_client.query(select_string);
     if(recordset.length === 0){
         return 0;
