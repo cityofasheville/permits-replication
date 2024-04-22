@@ -1,8 +1,6 @@
 // This function copies data from a source database to a target database.  
 
 async function run_copy(source_client, target_client, select_string, insert_table, unique_columns) {
-    let insert_count = 0;
-    let update_count = 0;
     let datarows = [];
     const { recordset } = await source_client.query(select_string);
 

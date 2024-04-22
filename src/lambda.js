@@ -16,8 +16,6 @@ export async function handler(event, context) {
         source_client = await get_ss_client(accela_connection);
         target_client = await get_pg_client(library_connection);
 
-        // Permits have to pull for the whole day because of Accela's inconsentent use of status_date.
-        // Comments and contractors pull since last run (15 minutes).
         let tables = [
             {
                 insert_table: 'internal.permits',
@@ -38,14 +36,14 @@ export async function handler(event, context) {
                 unique_columns: ['permit_num', 'comment_seq_number'],
                 select_string: `
                 select * from amd.permit_comments
-                where comment_date between DATEADD(MINUTE,-16,GETDATE()) and GETDATE();
+                where cast(comment_date as date) = cast(GETDATE() as date);
             `},
             {
                 insert_table: 'internal.permit_contractors',
                 unique_columns: ['permit_num', 'contractor_license_number', 'license_type'],
                 select_string: `
                 select * from amd.permit_contractors
-                where record_date between DATEADD(MINUTE,-16,GETDATE()) and GETDATE();
+                where cast(record_date as date) = cast(GETDATE() as date);
             `}
         ];
         for (let i = 0; i < tables.length; i++) {
@@ -58,9 +56,13 @@ export async function handler(event, context) {
                 rows_updated: table.rowCount
             }
         });
-        // Now rebuild the materialized view
+        // Now refresh the materialized views
+        // These are precaclulating some of the longer running queries
         await target_client.query('refresh materialized view concurrently simplicity.m_v_simplicity_permits;');
         results.push({ materialized_view: 'simplicity.m_v_simplicity_permits' });
+        await target_client.query('refresh materialized view concurrently simplicity.m_v_link_permits_along_street;');
+        results.push({ materialized_view: 'simplicity.m_v_link_permits_along_street' });
+
         console.log("Results",results);
         return ({
             'statusCode': 200,
