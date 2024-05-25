@@ -35,15 +35,20 @@ export async function handler(event, context) {
                 insert_table: 'internal.permit_comments',
                 unique_columns: ['permit_num', 'comment_seq_number'],
                 select_string: `
-                select * from amd.permit_comments
+                select permit_num, comment_seq_number, comment_date, substring(comments, 0, 2000) as comments
+                from amd.permit_comments
                 where cast(comment_date as date) = cast(GETDATE() as date);
             `},
             {
                 insert_table: 'internal.permit_contractors',
                 unique_columns: ['permit_num', 'contractor_license_number', 'license_type'],
                 select_string: `
-                select * from amd.permit_contractors
-                where cast(record_date as date) = cast(GETDATE() as date);
+                select permit_num, contractor_name, license_type, contractor_license_number, contractor_contact_name,
+                contractor_address1, contractor_address2, contractor_address3, contractor_city, contractor_state,
+                contractor_zip, contractor_phone, contractor_email, substring(contractor_comment, 0, 2000) as contractor_comment,
+                record_date
+                from amd.permit_contractors
+                where cast(record_date as date) = cast(GETDATE() as date); 
             `}
         ];
         for (let i = 0; i < tables.length; i++) {

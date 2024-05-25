@@ -1,3 +1,3 @@
 import { handler } from './lambda.js';
 
-handler({"local":true},{}).then(console.log).catch(console.error);
+handler({"local":true},{}).then((ret)=>console.log(ret)).catch(console.error);
