@@ -39,7 +39,7 @@ data "archive_file" "${config.prog_name}_zip" {
 
 # Lambda Function
 resource "aws_lambda_function" "${config.prog_name}" {
-  description      = "Replication Permit tables copied from Accela to SimpliCity throughout day" 
+  description      = "${config.description}" 
   function_name    = "${config.prog_name}"
   role             = aws_iam_role.${config.prog_name}-role.arn
   handler          = "index.handler"
