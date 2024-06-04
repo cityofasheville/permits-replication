@@ -2,3 +2,5 @@ node_modules/
 build/
 .env
 deploy.yaml
+
+.DS_Store
