@@ -39,3 +39,19 @@ When you create them, it's like a snapshot view of the base tables.
 
 You reload the data with the command:
     refresh materialized view concurrently simplicity.materialized_view_name;
+
+### Usage
+First run ```npm install```
+
+```package.json``` has these scripts:
+- Test Locally: 
+  - ```npm start``` (or for a Python program: ```npm run startpy```)
+- Deploy: 
+  - ```npm run deploy```
+- Destroy: (removes all objects from AWS)
+  - ```npm run destroy```
+- Clean: 
+  - ```npm run clean``` (removes local temp files)
+
+The Deploy/Destroy commands use the name of the active GitHub branch when creating AWS resources.
+For example, if the active GitHub branch is "feature" and the name of the resource is "template", the resource is named "template_feature". For API gateway domains, it's "feature-template.ashevillenc.gov". Production (or main) branches do not get a prefix/suffix.
