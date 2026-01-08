@@ -7,7 +7,7 @@ export async function handler(event, context) {
     let source_client;
     let target_client;
     try {
-        const accela_connection = await getConnection('coa-acceladb/accela/mssqlgisadmin');
+        const accela_connection = await getConnection('scube/accela/asheville');
         const library_connection = await getConnection('pubrecdb1/mdastore1/dbadmin');
         if (event.local) {
             accela_connection.host = 'localhost';
